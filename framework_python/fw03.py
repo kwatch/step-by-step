@@ -5,34 +5,29 @@
 ## TODO: 環境変数が表示されないよう、waitressを使うべきか？
 ##
 
-from html import escape as h
+import os
 
 
 class WSGIApplication(object):
 
     def __call__(self, environ, start_response):
         ## environ (HTTPリクエスト情報が格納された辞書) の
-        ## 内容 (キーと値) をHTMLテーブルで表示する
-        buf = []; add = buf.append
-        add("<table border=1 cellspacing=0 cellpadding=2>")
-        add("<tr>")
-        add("  <th>Key</th>")
-        add("  <th>Type</th>")   # 値の型名 (str, boolなど) も表示
-        add("  <th>Value</th>")
-        add("</tr>")
+        ## 内容 (キーと値) を一覧表示
+        buf = []
         for key in sorted(environ.keys()):
+            ## 注: wsgirefのHTTPサーバだと、環境変数の内容が
+            ## environに混ざるので、環境変数を除いて表示する
+            if key in os.environ:
+                continue
+            ## キーと、値の型と、値を、一行ずつ表示
             val = environ[key]
-            add("<tr>")
-            add("  <td><b>%s</b></td>" % h(key))
-            add("  <td><i>%s</i></td>" % h(type(val).__name__))
-            add("  <td><tt>%s</tt></td>" % h(str(val)))
-            add("</tr>")
-        add("</table>")
-        content = "\n".join(buf)
-        #
+            typ = "(%s)" % type(val).__name__
+            buf.append("%-25s %5s %r\n" % (key, typ, val))
+        content = "".join(buf)
+        ## text/html ではなく text/plain で表示
         status = "200 OK"
         headers = [
-            ('Content-Type', 'text/html;charset-utf8'),
+            ('Content-Type', 'text/plain;charset-utf8'),
         ]
         start_response(status, headers)
         return [content.encode('utf-8')]

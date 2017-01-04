@@ -8,7 +8,7 @@
 ## * ...
 ##
 
-from html import escape as h
+import os
 
 
 class Action(object):
@@ -16,6 +16,7 @@ class Action(object):
     def __init__(self, environ):
         self.environ = environ
         self.status  = "200 OK"
+        self.content_type = "text/html;charset=utf-8"
 
     def _http_405(self):
         self.status = "405 Method Not Allowed"
@@ -42,28 +43,21 @@ class HelloAction(Action):
         return "<h1>Hello, World!</h1>"
 
 
-class TableAction(Action):
+class EnvironAction(Action):
 
-    ## GET() を上書きしていないので、ブラウザで '/table' にアクセスすると
-    ## 405 Method Not Allowed が表示される
+    ## GET() を上書きしていないので、ブラウザで '/environ' にアクセスすると
+    ## 405 Method Not Allowed が表示されるようになる
     def POST(self):   # ← GET ではなく POST であることに注
         environ = self.environ
-        buf = []; add = buf.append
-        add("<table border=1 cellspacing=0 cellpadding=2>")
-        add("<tr>")
-        add("  <th>Key</th>")
-        add("  <th>Type</th>")
-        add("  <th>Value</th>")
-        add("</tr>")
-        for key in sorted(self.environ.keys()):
+        buf = []
+        for key in sorted(environ.keys()):
+            if key in os.environ:
+                continue
             val = environ[key]
-            add("<tr>")
-            add("  <td><b>%s</b></td>" % h(key))
-            add("  <td><i>%s</i></td>" % h(type(val).__name__))
-            add("  <td><tt>%s</tt></td>" % h(str(val)))
-            add("</tr>")
-        add("</table>")
-        content = "\n".join(buf)
+            typ = "(%s)" % type(val).__name__
+            buf.append("%-25s %-7s %r\n" % (key, typ, val))
+        content = "".join(buf)
+        self.content_type = "text/plain;charset=utf-8"
         return content
 
 
@@ -96,8 +90,8 @@ class WSGIApplication(object):
         req_path = environ['PATH_INFO']
         if req_path == '/hello':
             klass = HelloAction
-        elif req_path == '/table':
-            klass = TableAction
+        elif req_path == '/environ':
+            klass = EnvironAction
         elif req_path == '/form':   # ← 追加
             klass = FormAction      # ← 追加
         else:
@@ -112,12 +106,14 @@ class WSGIApplication(object):
             func = getattr(action, req_meth)  # インスタンスメソッドを取り出して
             content = func()                  # 呼び出す
             status = action.status  # ex: '200 OK' or '405 Method Not Allowed'
+            ctype  = action.content_type
         else:
-            status = "404 Not Found"
-            content = "<h2>%s</h2>" % h(status)
+            status  = "404 Not Found"
+            content = "<h2>%s</h2>" % status
+            ctype   = "text/html;charset=utf-8"
         #
         headers = [
-            ('Content-Type', 'text/html;charset-utf8'),
+            ('Content-Type', ctype),
         ]
         start_response(status, headers)
         return [content.encode('utf-8')]
