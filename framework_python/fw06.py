@@ -86,7 +86,6 @@ class FormAction(Action):
 class WSGIApplication(object):
 
     def __call__(self, environ, start_response):
-        req_meth = environ['REQUEST_METHOD']   # ← 追加
         req_path = environ['PATH_INFO']
         if req_path == '/hello':
             klass = HelloAction
@@ -99,14 +98,18 @@ class WSGIApplication(object):
         #
         if klass:
             ## リクエストメソッドに応じたインスタンスメソッドを呼び出す
-            ## (TODO: 本当は他のリクエストメソッドもあり得る)
-            assert req_meth in ('GET', 'POST', 'PUT', 'DELETE', 'PATCH',
-                                'OPTIONS', 'TRACE', 'HEAD')
+            ##  (なければ 405 Method Not Allowed)
+            req_meth = environ['REQUEST_METHOD']  # ex: 'GET', 'POST', ...
             action = klass(environ)
-            func = getattr(action, req_meth)  # インスタンスメソッドを取り出して
-            content = func()                  # 呼び出す
-            status = action.status  # ex: '200 OK' or '405 Method Not Allowed'
-            ctype  = action.content_type
+            func = getattr(action, req_meth, None)
+            if func:
+                content = func()
+                status = action.status       # ex: '200 OK'
+                ctype  = action.content_type
+            else:
+                status  = "405 Method Not Allowed"
+                content = "<h2>%s</h2>" % status
+                ctype   = "text/html;charset=utf-8"
         else:
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
