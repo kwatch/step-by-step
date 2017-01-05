@@ -65,21 +65,17 @@ class FormAction(Action):
 
     def GET(self):
         req_meth = self.environ['REQUEST_METHOD']
-        html = r"""
-<p>REQUEST_METHOD: %r</p>
-<form method="POST" action="/form">
-  <input type="submit">
-</form>
-"""[1:] % req_meth
-        return html
+        html = ('<p>REQUEST_METHOD: %r</p>\n'
+                '<form method="POST" action="/form">\n'
+                '  <input type="submit">\n'
+                '</form>\n')
+        return html % req_meth
 
     def POST(self):
         req_meth = self.environ['REQUEST_METHOD']
-        html = r"""
-<p>REQUEST_METHOD: %r</p>
-<p><a href="/form">back</p>
-""" % req_meth
-        return html
+        html = ('<p>REQUEST_METHOD: %r</p>\n'
+                '<p><a href="/form">back</a></p>\n')
+        return html % req_meth
 
 
 class WSGIApplication(object):
