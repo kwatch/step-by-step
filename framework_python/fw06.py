@@ -30,11 +30,10 @@ class Action(object):
     def OPTIONS(self):  return self._http_405()
     def TRACE  (self):  return self._http_405()
 
+    ## HEADメソッドは、コンテンツを何も返さない以外はGETと同じ挙動をする
     def HEAD(self):
-        ## HEADメソッドは、コンテンツを何も返さない以外はGETと同じ挙動をする。
-        ## そのため、self.GET() を呼び出すが返されたコンテンツは無視する。
-        self.GET()
-        return ""
+        ## ここで返したコンテンツは、WSGI アプリケーション側で無視される
+        return self.GET()
 
 
 class HelloAction(Action):
@@ -86,6 +85,7 @@ class FormAction(Action):
 class WSGIApplication(object):
 
     def __call__(self, environ, start_response):
+        req_meth = environ['REQUEST_METHOD']  # ex: 'GET', 'POST', ...
         req_path = environ['PATH_INFO']
         if   req_path == '/hello'  : klass = HelloAction
         elif req_path == '/environ': klass = EnvironAction
@@ -99,7 +99,6 @@ class WSGIApplication(object):
         else:
             ## リクエストメソッドに応じたインスタンスメソッドを呼び出す
             ##  (なければ 405 Method Not Allowed)
-            req_meth = environ['REQUEST_METHOD']  # ex: 'GET', 'POST', ...
             action = klass(environ)
             func = getattr(action, req_meth, None)
             if func is None:
@@ -110,6 +109,9 @@ class WSGIApplication(object):
                 content = func()
                 status  = action.status       # ex: '200 OK'
                 ctype   = action.content_type
+        ## HEAD メソッドの場合は、コンテンツを空にする
+        if req_meth == 'HEAD':
+            content = ""
         #
         headers = [
             ('Content-Type', ctype),

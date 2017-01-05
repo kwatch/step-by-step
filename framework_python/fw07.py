@@ -58,8 +58,7 @@ class Action(object):
     def TRACE  (self):  return self._http_405()
 
     def HEAD(self):
-        self.GET()
-        return ""
+        return self.GET()
 
 
 class HelloAction(Action):
@@ -112,6 +111,7 @@ class WSGIApplication(object):
         req  = Request(environ)
         resp = Response()
         #
+        req_meth = req.method          # ← 変更
         req_path = req.path            # ← 変更
         if   req_path == '/hello'  : klass = HelloAction
         elif req_path == '/environ': klass = EnvironAction
@@ -122,7 +122,6 @@ class WSGIApplication(object):
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
         else:
-            req_meth = req.method      # ← 変更
             action = klass(req, resp)  # ← 変更
             func = getattr(action, req_meth, None)
             if func is None:
@@ -131,6 +130,8 @@ class WSGIApplication(object):
             else:
                 content = func()
                 status  = resp.status  # ← 変更
+        if req_meth == 'HEAD':
+            content = ""
         #
         headers = resp.header_list()   # ← 変更
         start_response(status, headers)
