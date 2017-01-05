@@ -96,19 +96,19 @@ class WSGIApplication(object):
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
             ctype   = "text/html;charset=utf-8"
+        ## もしリクエストメソッドに対応したアクション関数がなければ、
+        ## 405 Method Not Allowed
+        elif not hasattr(klass, req_meth)
+            status  = "405 Method Not Allowed"
+            content = "<h2>%s</h2>" % status
+            ctype   = "text/html;charset=utf-8"
+        ## そうでなければ、アクション関数を呼び出す
         else:
-            ## リクエストメソッドに応じたインスタンスメソッドを呼び出す
-            ##  (なければ 405 Method Not Allowed)
-            action = klass(environ)
-            func = getattr(action, req_meth, None)
-            if func is None:
-                status  = "405 Method Not Allowed"
-                content = "<h2>%s</h2>" % status
-                ctype   = "text/html;charset=utf-8"
-            else:
-                content = func()
-                status  = action.status       # ex: '200 OK'
-                ctype   = action.content_type
+            func    = getattr(klass, req_meth)
+            action  = klass(environ)
+            content = func(action)
+            status  = action.status       # ex: '200 OK'
+            ctype   = action.content_type
         ## HEAD メソッドの場合は、コンテンツを空にする
         if req_meth == 'HEAD':
             content = ""

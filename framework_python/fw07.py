@@ -121,15 +121,15 @@ class WSGIApplication(object):
         if klass is None:
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
+        elif not hasattr(klass, req_meth):
+            status  = "405 Method Not Allowed"
+            content = "<h2>%s</h2>" % status
         else:
-            action = klass(req, resp)  # ← 変更
-            func = getattr(action, req_meth, None)
-            if func is None:
-                status  = "405 Method Not Allowed"
-                content = "<h2>%s</h2>" % status
-            else:
-                content = func()
-                status  = resp.status  # ← 変更
+            func    = getattr(klass, req_meth)
+            action  = klass(req, resp) # ← 変更
+            content = func(action)
+            status  = resp.status      # ← 変更
+        #
         if req_meth == 'HEAD':
             content = ""
         #
