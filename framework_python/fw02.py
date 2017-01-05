@@ -1,27 +1,34 @@
 # -*- coding: utf-8 -*-
 
 ##
-## WSGI アプリケーションをクラスにする
+## HTTP リクエストの中身を表示する
 ##
 
-
-class WSGIApplication(object):
-
-    ## オブジェクトをあたかも関数のように呼び出すためのメソッド
-    ## (注: Pythonでは obj.__call__() を obj() と書ける)
-    def __call__(self, environ, start_response):
-        content = "<h1>Hello, World!</h1>"
-        status = "200 OK"
-        headers = [
-            ('Content-Type', 'text/html;charset-utf8'),
-        ]
-        start_response(status, headers)
-        return [content.encode('utf-8')]
+import os
 
 
-## リクエスト情報が入った辞書オブジェクト(environ)を受け取り、
-## レスポンスを返すWSGIアプリケーションオブジェクト
-wsgi_app = WSGIApplication()
+## environ は、HTTP リクエスト情報が格納された辞書。
+## start_response は、レスポンス開始時に呼び出す関数。
+def wsgi_app(environ, start_response):
+    ## environ の内容 (キーと値) を一覧表示
+    buf = []
+    for key in sorted(environ.keys()):
+        ## 注: wsgiref の HTTP サーバだと、環境変数の内容が
+        ## environ に混ざるので、それらを表示しない
+        if key in os.environ:
+            continue
+        ## キーと、値の型と、値を、一行ずつ表示
+        val = environ[key]
+        typ = "(%s)" % type(val).__name__
+        buf.append("%-25s %5s %r\n" % (key, typ, val))
+    content = "".join(buf)
+    ## text/html ではなく text/plain で表示
+    status = "200 OK"
+    headers = [
+        ('Content-Type', 'text/plain;charset-utf8'),
+    ]
+    start_response(status, headers)
+    return [content.encode('utf-8')]
 
 
 if __name__ == "__main__":

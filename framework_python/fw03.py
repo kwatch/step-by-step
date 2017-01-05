@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## HTTPリクエストの中身を表示する
-## TODO: 環境変数が表示されないよう、waitressを使うべきか？
+## WSGI アプリケーションを関数からオブジェクトに変更する
 ##
 
 import os
@@ -10,21 +9,11 @@ import os
 
 class WSGIApplication(object):
 
+    ## オブジェクトをあたかも関数のように呼び出すためのメソッド
+    ## (注: Python では obj.__call__(x) を obj(x) と書ける)
     def __call__(self, environ, start_response):
-        ## environ (HTTPリクエスト情報が格納された辞書) の
-        ## 内容 (キーと値) を一覧表示
-        buf = []
-        for key in sorted(environ.keys()):
-            ## 注: wsgirefのHTTPサーバだと、環境変数の内容が
-            ## environに混ざるので、環境変数を除いて表示する
-            if key in os.environ:
-                continue
-            ## キーと、値の型と、値を、一行ずつ表示
-            val = environ[key]
-            typ = "(%s)" % type(val).__name__
-            buf.append("%-25s %5s %r\n" % (key, typ, val))
-        content = "".join(buf)
-        ## text/html ではなく text/plain で表示
+        content = self._render_content(environ)
+        #
         status = "200 OK"
         headers = [
             ('Content-Type', 'text/plain;charset-utf8'),
@@ -32,7 +21,22 @@ class WSGIApplication(object):
         start_response(status, headers)
         return [content.encode('utf-8')]
 
+    ## コンテンツ生成機能を別メソッドに分離する
+    def _render_content(self, environ):
+        buf = []
+        for key in sorted(environ.keys()):
+            if key in os.environ:
+                continue
+            val = environ[key]
+            typ = "(%s)" % type(val).__name__
+            buf.append("%-25s %5s %r\n" % (key, typ, val))
+        content = "".join(buf)
+        return content
 
+
+## これはオブジェクトであるが、関数と同じように呼び出せる
+## (＝ wsgi_app(environ, start_response) として呼び出せる)。
+## そのため、今までの関数と同じように扱える。
 wsgi_app = WSGIApplication()
 
 
