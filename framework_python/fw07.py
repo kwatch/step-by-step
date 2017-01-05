@@ -113,28 +113,24 @@ class WSGIApplication(object):
         resp = Response()
         #
         req_path = req.path            # ← 変更
-        if req_path == '/hello':
-            klass = HelloAction
-        elif req_path == '/environ':
-            klass = EnvironAction
-        elif req_path == '/form':
-            klass = FormAction
-        else:
-            klass = None
+        if   req_path == '/hello'  : klass = HelloAction
+        elif req_path == '/environ': klass = EnvironAction
+        elif req_path == '/form'   : klass = FormAction
+        else                       : klass = None
         #
-        if klass:
+        if klass is None:
+            status  = "404 Not Found"
+            content = "<h2>%s</h2>" % status
+        else:
             req_meth = req.method      # ← 変更
             action = klass(req, resp)  # ← 変更
             func = getattr(action, req_meth, None)
-            if func:
-                content = func()
-                status  = resp.status  # ← 変更
-            else:
+            if func is None:
                 status  = "405 Method Not Allowed"
                 content = "<h2>%s</h2>" % status
-        else:
-            status  = "404 Not Found"
-            content = "<h2>%s</h2>" % status
+            else:
+                content = func()
+                status  = resp.status  # ← 変更
         #
         headers = resp.header_list()   # ← 変更
         start_response(status, headers)

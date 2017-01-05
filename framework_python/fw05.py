@@ -49,25 +49,22 @@ class EnvironAction(Action):
 class WSGIApplication(object):
 
     def __call__(self, environ, start_response):
-        ## リクエストパスに対応したActionクラスを探す
+        ## リクエストパスに対応した Action クラスを探す
         req_path = environ['PATH_INFO']
-        if req_path == '/hello':
-            klass = HelloAction
-        elif req_path == '/environ':
-            klass = EnvironAction
+        if   req_path == '/hello'  : klass = HelloAction
+        elif req_path == '/environ': klass = EnvironAction
+        else                       : klass = None
+        ## Action クラスがなければ、404 Not Found を表示する
+        if klass is None:
+            status  = "404 Not Found"
+            content = "<h2>%s</h2>" % status
+            ctype   = "text/html;charset=utf-8"
+        ## Action クラスがあれば、コンテンツを生成する
         else:
-            klass = None
-        ## Actionクラスがあれば、コンテンツを生成する
-        if klass:
             action  = klass(environ)
             content = action.run()
             status  = "200 OK"
             ctype   = action.content_type
-        ## Actionクラスがなければ、404 Not Found を表示する
-        else:
-            status  = "404 Not Found"
-            content = "<h2>%s</h2>" % status
-            ctype   = "text/html;charset=utf-8"
         #
         headers = [
             ('Content-Type', ctype),

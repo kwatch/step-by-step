@@ -87,33 +87,29 @@ class WSGIApplication(object):
 
     def __call__(self, environ, start_response):
         req_path = environ['PATH_INFO']
-        if req_path == '/hello':
-            klass = HelloAction
-        elif req_path == '/environ':
-            klass = EnvironAction
-        elif req_path == '/form':   # ← 追加
-            klass = FormAction      # ← 追加
-        else:
-            klass = None
+        if   req_path == '/hello'  : klass = HelloAction
+        elif req_path == '/environ': klass = EnvironAction
+        elif req_path == '/form'   : klass = FormAction  # ← 追加
+        else                       : klass = None
         #
-        if klass:
+        if klass is None:
+            status  = "404 Not Found"
+            content = "<h2>%s</h2>" % status
+            ctype   = "text/html;charset=utf-8"
+        else:
             ## リクエストメソッドに応じたインスタンスメソッドを呼び出す
             ##  (なければ 405 Method Not Allowed)
             req_meth = environ['REQUEST_METHOD']  # ex: 'GET', 'POST', ...
             action = klass(environ)
             func = getattr(action, req_meth, None)
-            if func:
-                content = func()
-                status = action.status       # ex: '200 OK'
-                ctype  = action.content_type
-            else:
+            if func is None:
                 status  = "405 Method Not Allowed"
                 content = "<h2>%s</h2>" % status
                 ctype   = "text/html;charset=utf-8"
-        else:
-            status  = "404 Not Found"
-            content = "<h2>%s</h2>" % status
-            ctype   = "text/html;charset=utf-8"
+            else:
+                content = func()
+                status  = action.status       # ex: '200 OK'
+                ctype   = action.content_type
         #
         headers = [
             ('Content-Type', ctype),
