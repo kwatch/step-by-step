@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## 前処理と後処理をサポート、JSON をサポート
+## subject: 前処理と後処理をサポート、JSON をサポート
 ##
 
 import os

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## リクエストパスに応じて、異なるコンテンツを返す
+## subject: リクエストパスに応じて、異なるコンテンツを返す
 ##
 ## * http://localhost:7000/hello なら、Hello World を表示
 ## * http://localhost:7000/environ なら、environの内容を表示

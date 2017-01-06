@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## RequestクラスとResponseクラスを作る
+## subject: RequestクラスとResponseクラスを作る
 ##
 
 import os

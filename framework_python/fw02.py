@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## HTTP リクエストの中身を表示する
+## subject: HTTP リクエストの中身を表示する
 ##
 
 import os

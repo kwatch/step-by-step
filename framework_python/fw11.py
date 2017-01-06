@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-## URLパスパラメータをサポート
+## subject: URLパスパラメータをサポート
 ##
 
 import os
