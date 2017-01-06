@@ -99,6 +99,11 @@ class Action(BaseAction):
         return self.GET()
 
 
+HTTP_REQUEST_METHODS = {'GET', 'POST', 'PUT', 'DELETE', 'HEAD',
+                        'PATCH', 'OPTIONS', 'TRACE'}
+assert HTTP_REQUEST_METHODS == { s for s in dir(Action) if s.isupper() }
+
+
 class HelloAction(Action):
 
     def GET(self):
@@ -154,7 +159,7 @@ class WSGIApplication(object):
         if klass is None:
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
-        elif not hasattr(klass, req_meth):
+        elif req_meth not in HTTP_REQUEST_METHODS:
             status  = "405 Method Not Allowed"
             content = "<h2>%s</h2>" % status
         else:

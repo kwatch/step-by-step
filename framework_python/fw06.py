@@ -36,6 +36,12 @@ class Action(object):
         return self.GET()
 
 
+## 利用可能なリクエストメソッド名の集合
+HTTP_REQUEST_METHODS = {'GET', 'POST', 'PUT', 'DELETE', 'HEAD',
+                        'PATCH', 'OPTIONS', 'TRACE'}
+assert HTTP_REQUEST_METHODS == { s for s in dir(Action) if s.isupper() }
+
+
 class HelloAction(Action):
 
     def GET(self):   # ← 変更
@@ -92,9 +98,8 @@ class WSGIApplication(object):
             status  = "404 Not Found"
             content = "<h2>%s</h2>" % status
             ctype   = "text/html;charset=utf-8"
-        ## もしリクエストメソッドに対応したアクション関数がなければ、
-        ## 405 Method Not Allowed
-        elif not hasattr(klass, req_meth)
+        ## もし知らないリクエストメソッドであれば 405 Method Not Allowed
+        elif req_meth not in HTTP_REQUEST_METHODS:
             status  = "405 Method Not Allowed"
             content = "<h2>%s</h2>" % status
             ctype   = "text/html;charset=utf-8"
